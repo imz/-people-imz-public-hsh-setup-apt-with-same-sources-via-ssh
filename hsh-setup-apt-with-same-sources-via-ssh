@@ -1,0 +1,17 @@
+#!/bin/sh -efuC
+set -o pipefail
+
+# An easy way to get access from inside hasher to some local repo is via ssh.
+# (Of course, there can be some security implications when you share network
+# with hasher and give it access via ssh.)
+
+readonly HSHDIR="$1"; shift
+
+readonly MY="${0%/*}"
+
+set -x
+
+# Generate the key for the access from inside hasher, and register it.
+"$MY"/hsh-setup-ssh-to-localhost "$HSHDIR"
+
+hsh-install "$HSHDIR" -- apt

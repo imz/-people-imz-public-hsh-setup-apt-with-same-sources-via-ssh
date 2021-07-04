@@ -1,0 +1,48 @@
+#!/bin/sh -efuC
+set -o pipefail
+
+# A script to setup ssh from hasher to localhost.
+#
+# Of course, there can be some security implications when you share network
+# with hasher and give it access to localhost via ssh.
+
+readonly HSHDIR="$1"; shift
+
+set -x
+
+hsh-install "$HSHDIR" -- openssh-clients
+
+# Generate the key for the access from inside hasher, and register it.
+
+# It makes little difference whether we generate the key in- or outside hasher.
+# (If we do it inside, we are sure not to clobber anything in user's homedir.)
+hsh-run --rooter "$HSHDIR" \
+	-- ssh-keygen -t rsa -f /root/.ssh/id_rsa \
+	</dev/null
+
+HSH_SSH_PUBKEY="$(hsh-run --rooter "$HSHDIR" \
+			  -- ssh-keygen -y -f /root/.ssh/id_rsa \
+			  </dev/null)"
+readonly HSH_SSH_PUBKEY
+IN_A_MONTH="$(date -d '+1 month' +%Y%m%d%H%M)"
+readonly IN_A_MONTH
+printf 'restrict,from="127.0.0.1/8,::1",expiry-time=%s %s rooter@ in %s\n' \
+       "$IN_A_MONTH" \
+       "$HSH_SSH_PUBKEY" \
+       "$HSHDIR" \
+       >>~/.ssh/authorized_keys
+
+hsh-run --rooter "$HSHDIR" \
+	-- sh -efuC -c 'cat >>/root/.ssh/config' \
+	<<EOF
+
+Host localhost
+     StrictHostKeyChecking no
+     User $USER
+EOF
+
+# Test that it works
+share_network=1 \
+	     hsh-run --rooter "$HSHDIR" \
+	     -- ssh localhost echo hello \
+	     </dev/null
