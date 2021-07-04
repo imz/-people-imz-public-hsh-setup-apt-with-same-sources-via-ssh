@@ -26,7 +26,7 @@ HSH_SSH_PUBKEY="$(hsh-run --rooter "$HSHDIR" \
 readonly HSH_SSH_PUBKEY
 IN_A_MONTH="$(date -d '+1 month' +%Y%m%d%H%M)"
 readonly IN_A_MONTH
-printf 'restrict,from="127.0.0.1/8,::1",expiry-time="%s" %s rooter@ in %s\n' \
+printf 'restrict,from="127.0.0.0/8,::1",expiry-time="%s" %s rooter@ in %s\n' \
        "$IN_A_MONTH" \
        "$HSH_SSH_PUBKEY" \
        "$HSHDIR" \
