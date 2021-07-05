@@ -25,10 +25,22 @@ HSH_SSH_PUBKEY="$(hsh-run --rooter "$HSHDIR" \
 			  -- ssh-keygen -y -f /root/.ssh/id_rsa \
 			  </dev/null)"
 readonly HSH_SSH_PUBKEY
-IN_A_MONTH="$(date -d '+1 month' +%Y%m%d%H%M)"
-readonly IN_A_MONTH
-printf 'restrict,from="127.0.0.0/8,::1",expiry-time="%s" %s rooter@ in %s\n' \
-       "$IN_A_MONTH" \
+HSH_SSH_KEY_OPTS='restrict,from="127.0.0.0/8,::1"'
+if [ has-expiry = "$(rpm -q openssh-server \
+                     --qf='%{VERSION:nothing}%|%{VERSION}>7.7?{has-expiry}:{}|\n')" ]
+   # OpenSSH 7.7 and above has this option. (But RPM has only the > test.)
+   # FIXME: get rid of %{VERSION:nothing} by fixing RPM ed507df77e,
+   # which now works only with cached tags on the LHS of >.
+then
+    IN_A_MONTH="$(date -d '+1 month' +%Y%m%d%H%M)"
+    readonly IN_A_MONTH
+    printf -v HSH_SSH_KEY_OPTS '%s,expiry-time="%s"' \
+	   "$HSH_SSH_KEY_OPTS" \
+	   "$IN_A_MONTH"
+fi
+readonly HSH_SSH_KEY_OPTS
+printf '%s %s rooter@ in %s\n' \
+       "$HSH_SSH_KEY_OPTS" \
        "$HSH_SSH_PUBKEY" \
        "$HSHDIR" \
        >>~/.ssh/authorized_keys
