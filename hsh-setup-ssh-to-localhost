@@ -8,6 +8,7 @@ set -o pipefail
 
 readonly HSHDIR="$1"; shift
 
+readonly MY="${0%/*}"
 set -x
 
 hsh-install "$HSHDIR" -- openssh-clients
@@ -32,8 +33,7 @@ printf 'restrict,from="127.0.0.0/8,::1",expiry-time="%s" %s rooter@ in %s\n' \
        "$HSHDIR" \
        >>~/.ssh/authorized_keys
 
-hsh-run --rooter "$HSHDIR" \
-	-- sh -efuC -c 'cat >>/root/.ssh/config' \
+"$MY"/hsh-write --rooter "$HSHDIR" -- /root/.ssh/config \
 	<<EOF
 
 Host localhost

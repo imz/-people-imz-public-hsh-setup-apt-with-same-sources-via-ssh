@@ -1,0 +1,36 @@
+#!/bin/sh -efuC
+set -o pipefail
+
+# hsh-write: Write (or append) stdin to a file inside hasher.
+
+# A bit of complexity comes from the fact that we construct a shell command,
+# therefore we need to quote the argument.
+# (Another implementation could be with tee and without the need for quoting.)
+
+HSH_ARGS=()
+
+while [ $# -gt 1 ]; do
+    if [ -z "${CMD_FMT-}" ]; then
+	case "$1" in
+	    -a|--append)
+		readonly CMD_FMT='cat >>%q'
+		shift
+		continue
+		;;
+	esac
+    fi
+    HSH_ARGS=("${HSH_ARGS[@]}" "$1"); shift
+done
+
+if [ -z "${CMD_FMT-}" ]; then
+    readonly CMD_FMT='cat >|%q'
+fi
+
+readonly -a HSH_ARGS
+
+readonly WHERE="$1"; shift
+
+printf -v CMD "$CMD_FMT" "$WHERE"
+readonly CMD
+
+exec hsh-run "${HSH_ARGS[@]}" sh -efuC -c "$CMD"
