@@ -24,6 +24,19 @@ set -x
 
 hsh-install "$HSHDIR" -- apt
 
+readonly FIELD_RE_FMT='[[:blank:]]*%s[[:blank:]]+'
+printf -v TYPE_RE "$FIELD_RE_FMT" '[^[:blank:]]+'
+readonly TYPE_RE
+printf -v SIG_RE "$FIELD_RE_FMT" '\[[^]]*\]'
+readonly SIG_RE
+# We process the only sources.list filled out by mkaptbox.
+# We don't honor comments (i.e., edit URIs inside them, too).
+<"$HSHDIR"/aptbox/etc/apt/sources.list \
+ sed -Ee "s,^($TYPE_RE($SIG_RE)?)file:/,\1ssh://localhost/," \
+    | "$MY"/hsh-write --rooter "$HSHDIR" -- /etc/apt/sources.list
+
+# Note that any /etc/apt/sources.list.d/* are not affected.
+
 [ -n "$UPDATE" ] || exit 0
 
 share_network=1 \
