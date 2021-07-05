@@ -5,6 +5,15 @@ set -o pipefail
 # (Of course, there can be some security implications when you share network
 # with hasher and give it access via ssh.)
 
+case "$1" in
+    -u|--update)
+	readonly UPDATE=yes
+	shift
+	;;
+    *)
+	readonly UPDATE=
+	;;
+esac
 readonly HSHDIR="$1"; shift
 
 readonly MY="${0%/*}"
@@ -14,3 +23,10 @@ set -x
 "$MY"/hsh-setup-ssh-to-localhost "$HSHDIR"
 
 hsh-install "$HSHDIR" -- apt
+
+[ -n "$UPDATE" ] || exit 0
+
+share_network=1 \
+	     hsh-run --rooter "$HSHDIR" \
+	     -- apt-get update \
+	     </dev/null
