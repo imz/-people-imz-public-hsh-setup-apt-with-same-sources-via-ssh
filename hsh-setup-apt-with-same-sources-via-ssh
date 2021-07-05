@@ -16,7 +16,7 @@ case "$1" in
 esac
 readonly HSHDIR="$1"; shift
 
-readonly MY="${0%/*}"
+readonly MY="$(dirname -- "$(realpath -- "$0")")"
 set -x
 
 hsh-install "$HSHDIR" -- apt
