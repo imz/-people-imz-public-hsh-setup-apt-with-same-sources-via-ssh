@@ -8,7 +8,8 @@ set -o pipefail
 
 readonly HSHDIR="$1"; shift
 
-readonly MY="$(dirname -- "$(realpath -- "$0")")"
+MY="$(dirname -- "$(realpath -- "$0")")"
+readonly MY
 set -x
 
 hsh-install "$HSHDIR" -- openssh-clients
